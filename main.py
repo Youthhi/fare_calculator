@@ -68,3 +68,5 @@ label_result = tk.Label(window, text="Total Fare: RM 0.00", font=("Arial", 12, "
 label_result.pack(pady=10)
 
 window.mainloop()
+
+#the changes
