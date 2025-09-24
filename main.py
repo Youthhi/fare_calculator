@@ -36,20 +36,25 @@ def toggle_theme():
     design.config(bg=colors["header_bg"], fg=colors["header_fg"])
     
     for widget in window.winfo_children():
-        if isinstance(widget, tk.Label):
-            if "Fare Calculator" not in widget.cget("text"):
-                widget.config(bg=colors["bg"], fg=colors["fg"])
-        elif isinstance(widget, tk.Radiobutton):
-            widget.config(bg=colors["bg"], fg=colors["fg"], selectcolor=colors["select_color"])
-        elif isinstance(widget, tk.Button):
-            widget.config(bg=colors["button_bg"], fg=colors["button_fg"])
+        try:  # safeguard in case widget doesn't support config
+            if isinstance(widget, tk.Label):
+                if "Fare Calculator" not in widget.cget("text"):
+                    widget.config(bg=colors["bg"], fg=colors["fg"])
+            elif isinstance(widget, tk.Radiobutton):
+                widget.config(bg=colors["bg"], fg=colors["fg"], selectcolor=colors["select_color"])
+            elif isinstance(widget, tk.Button):
+                widget.config(bg=colors["button_bg"], fg=colors["button_fg"])
+        except Exception:
+            continue
     
+    # Keep entries consistent for now
     distance_input.config(bg="white", fg="black")
     tip_entry.config(bg="white", fg="black")
     label_result.config(bg=colors["bg"], fg=colors["fg"])
 
+
 def update_rate_label():
-    """Updates the displayed rate based on the selected fare type."""
+    
     selected_fare = fare_choice.get()
     rate = 0.0
     if selected_fare == "standard":
@@ -58,25 +63,47 @@ def update_rate_label():
         rate = 1.50
     elif selected_fare == "holiday":
         rate = 1.80
+    else:
+        # error handling for unexpected fare type
+        rate_label.config(text="Error: Unknown fare type")
+        return
     
     rate_label.config(text=f"Rate per km: RM {rate:.2f}")
 
+
 def toggle_tip_field():
-    """Shows or hides the tip input frame based on the checkbox state."""
+    
     if tip_checkbox_var.get():
         tip_frame.pack()
+        # validate existing text when showing
+        try:
+            if tip_entry.get():
+                float(tip_entry.get())
+        except ValueError:
+            tip_entry.delete(0, tk.END)
     else:
         tip_frame.pack_forget()
         tip_entry.delete(0, tk.END)
 
+
 def calculate_fare():
     """Calculates and displays the total fare, including an optional tip."""
     try:
-        distance = float(distance_input.get())
+        distance_text = distance_input.get()
+        if not distance_text.strip():
+            raise ValueError("Distance is required")
+        
+        distance = float(distance_text)
+        if distance < 0:
+            raise ValueError("Distance cannot be negative")
+        
         tip_amount = 0.0
         if tip_checkbox_var.get():
             tip_input = tip_entry.get()
-            tip_amount = float(tip_input) if tip_input else 0.0
+            if tip_input:
+                tip_amount = float(tip_input)
+                if tip_amount < 0:
+                    raise ValueError("Tip cannot be negative")
         
         rate = 0.0
         if fare_choice.get() == "standard":
@@ -85,11 +112,14 @@ def calculate_fare():
             rate = 1.5
         elif fare_choice.get() == "holiday":
             rate = 1.8
+        else:
+            raise ValueError("Unknown fare type")
         
         total = (rate * distance) + tip_amount
-        label_result.config(text=f"Total Fare: RM {total:.2f}")
-    except ValueError:
-        label_result.config(text="Invalid input. Please enter numeric values.", fg="red")
+        label_result.config(text=f"Total Fare: RM {total:.2f}", fg=themes[current_theme]["fg"])
+    except ValueError as e:
+        label_result.config(text=f"Error: {e}", fg="red")
+
 
 def reset_all():
     """Resets all input fields, radio buttons, and the result."""
@@ -127,7 +157,7 @@ tk.Label(window, text="Distance (km):").pack(pady=5)
 distance_input = tk.Entry(window)
 distance_input.pack()
 
-# New: Checkbox for Tip and its frame
+# Checkbox for Tip and its frame
 tip_checkbox = tk.Checkbutton(window, text="Add Tip", variable=tip_checkbox_var, command=toggle_tip_field)
 tip_checkbox.pack(pady=5)
 
@@ -153,3 +183,4 @@ label_result = tk.Label(window, text="Total Fare: RM 0.00", font=("Arial", 12, "
 label_result.pack(pady=10)
 
 window.mainloop()
+
