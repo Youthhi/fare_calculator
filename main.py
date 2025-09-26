@@ -1,6 +1,6 @@
 import tkinter as tk
 
-# --- Theming Data ---
+# theme toggle
 current_theme = "light"
 themes = {
     "light": {
@@ -23,7 +23,7 @@ themes = {
     }
 }
 
-# --- Functions ---
+# theme toggle function
 
 def toggle_theme():
     """Switches the application's color theme between light and dark."""
@@ -47,7 +47,7 @@ def toggle_theme():
         except Exception:
             continue
     
-    # Keep entries consistent for now
+    
     distance_input.config(bg="white", fg="black")
     tip_entry.config(bg="white", fg="black")
     label_result.config(bg=colors["bg"], fg=colors["fg"])
@@ -131,12 +131,12 @@ def reset_all():
     toggle_tip_field()
     label_result.config(text="Total Fare: RM 0.00", fg=themes[current_theme]["fg"])
 
-# --- GUI window ---
+
 window = tk.Tk()
 window.geometry("400x450")
 window.title("Fare Calculator")
 
-design = tk.Label(window, text="Fare Calculator", fg="white", bg="green",
+design = tk.Label(window, text="Fare Calculator", fg="white", bg="green",# gui base structure
                   font=("Times New Roman", 20), width=100)
 design.pack()
 
